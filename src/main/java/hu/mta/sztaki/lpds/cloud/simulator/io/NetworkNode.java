@@ -30,6 +30,7 @@ import hu.mta.sztaki.lpds.cloud.simulator.iaas.resourcemodel.MaxMinConsumer;
 import hu.mta.sztaki.lpds.cloud.simulator.iaas.resourcemodel.MaxMinProvider;
 import hu.mta.sztaki.lpds.cloud.simulator.iaas.resourcemodel.ResourceConsumption;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class NetworkNode {
@@ -103,6 +104,31 @@ public class NetworkNode {
 		} else {
 			return new SingleTransfer(checkConnectivity(from, to), size, limit,
 					to.inbws, from.outbws, e);
+		}
+	}
+
+	public static ArrayList<ResourceConsumption> initTransfer(final long size,
+			final double limit, final ArrayList<NetworkNode> nodes,
+			final ResourceConsumption.ConsumptionEvent e)
+			throws NetworkException {
+		ArrayList<ResourceConsumption> consumptions = new ArrayList<ResourceConsumption>();
+		if (nodes.size() == 0) {
+			throw new NetworkException("No nodes to transfer data between");
+		}
+		if (nodes.size() == 1) {
+			consumptions.add(new SingleTransfer(0, size, limit, nodes.get(0).diskinbws,
+					nodes.get(0).diskoutbws, e));
+			return consumptions;
+		} else {
+			int latency = 0;
+			for (int i = 0; i < nodes.size() - 1; i++) {
+				NetworkNode from = nodes.get(i);
+				NetworkNode to = nodes.get(i + 1);
+				latency += checkConnectivity(from, to);
+				consumptions.add(new SingleTransfer(latency, size, limit, to.inbws,
+					from.outbws, e));
+			}
+			return consumptions;
 		}
 	}
 
