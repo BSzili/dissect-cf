@@ -108,10 +108,12 @@ public class NetworkNode {
 	}
 
 	public static ArrayList<ResourceConsumption> initTransfer(final long size,
-			final double limit, final ArrayList<NetworkNode> nodes,
+			final double limit,	final NetworkNode from, final NetworkNode to, 
+			final NetworkTopology topology,
 			final ResourceConsumption.ConsumptionEvent e)
 			throws NetworkException {
 		ArrayList<ResourceConsumption> consumptions = new ArrayList<ResourceConsumption>();
+		ArrayList<NetworkNode> nodes = topology.getRoute(from, to);
 		if (nodes.size() == 0) {
 			throw new NetworkException("No nodes to transfer data between");
 		}
@@ -122,11 +124,11 @@ public class NetworkNode {
 		} else {
 			int latency = 0;
 			for (int i = 0; i < nodes.size() - 1; i++) {
-				NetworkNode from = nodes.get(i);
-				NetworkNode to = nodes.get(i + 1);
-				latency += checkConnectivity(from, to);
-				consumptions.add(new SingleTransfer(latency, size, limit, to.inbws,
-					from.outbws, e));
+				NetworkNode fromNode = nodes.get(i);
+				NetworkNode toNode = nodes.get(i + 1);
+				latency += checkConnectivity(fromNode, toNode);
+				consumptions.add(new SingleTransfer(latency, size, limit, toNode.inbws,
+					fromNode.outbws, e));
 			}
 			return consumptions;
 		}
